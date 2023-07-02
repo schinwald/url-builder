@@ -1,6 +1,6 @@
 {
   "name": "@schinwald/url-builder",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "A versatile libary to create URLs from variables.",
   "type": "module",
   "main": "index.js",
