@@ -1,0 +1,26 @@
+{
+  "name": "@schinwald/url-builder",
+  "version": "0.0.0",
+  "description": "A versatile libary to create URLs from variables.",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/schinwald/url-builder.git"
+  },
+  "keywords": [
+    "url",
+    "builder",
+    "string",
+    "mozilla"
+  ],
+  "author": "James Schinwald",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/schinwald/url-builder/issues"
+  },
+  "homepage": "https://github.com/schinwald/url-builder#readme"
+}
