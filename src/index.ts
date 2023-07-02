@@ -1,38 +1,145 @@
-export interface URL {
-  scheme?: string
-  username?: string
-  password?: string
-  hostname: string
-  port?: number
-  endpoint?: string
+export type URLBuilderOptions = {
+  /**
+   * @description The base of the URL
+   * @example 'https://www.example.com'
+   */
+  base: string | {
+    /**
+     * @description The authentication credential(s) https://authentication@www.example.com
+     */
+    authentication?: {
+      /**
+       * @description The username to authenticate the user https://username@password@www.example.com
+       * @example 'username'
+       */
+      username: string
+
+      /**
+       * @description The password to authenticate the user https://username:password@www.example.com
+       * @example 'password'
+       */
+      password?: string
+    }
+
+    /**
+     * @description The scheme/protocol of the URL
+     * @example 'https'
+     */
+    scheme: string
+
+    /**
+     * @description The domains of the URL (sub-domain, domain, and top level domain)
+     * @example 'www.example.com'
+     */
+    domains: string
+    
+    /**
+     * @description The port of the URL
+     * @example 3000
+     * 
+     * @default Depends on the scheme:
+     * 
+     * http     ->   80
+     * https    ->  443
+     */
+    port?: number
+  }
+
+  /**
+   * @description The path of the URL https://www.example.com/path/to/resource
+   * @example '/path/to/resource'
+   * 
+   * @default '/''
+   */
+  path?: string
+
+  /**
+   * @description The query of the URL https://www.example.com?query=value
+   * @example { query: value }
+   */
+  query?: Record<string, string>
+
+  /**
+   * @description The fragment of the URL https://www.example.com#fragment
+   * @example 'fragment'
+   */
+  fragment?: string
+}
+
+const hiddenPorts = new Set([
+  'http:80',
+  'https:443'
+])
+
+/**
+ * @description Checks if a port is hidden
+ * @param port a port number or undefined
+ * @returns a boolean
+ */
+function isHiddenPort (schema: string, port?: number): boolean {
+  if (typeof port === 'undefined') return false
+  return hiddenPorts.has(`${schema}:${port}`)
 }
 
 /**
- * Builds a URL string from a URL object
+ * @description Builds a URL string
  * @param url an object of URL parameters
  * @returns a URL string
  */
-export function URLBuilder (url: URL): string {
-  // Remove beginning forward slash from endpoint if there is one
-  if (url.endpoint !== undefined && url.endpoint.length > 0) {
-    url.endpoint = url.endpoint[0] === '/' ? url.endpoint.slice(1) : url.endpoint
+export function URLBuilder (url: URLBuilderOptions): string {
+  let firstHalf: string
+  let secondHalf: string
+  
+  /** 
+   * Generate the first half of the URL
+   */
+
+  switch (typeof url.base) {
+    // Extract base URL from string
+    case 'string':
+      firstHalf = url.base
+      break
+    // Extract base URL from object
+    case 'object':
+      const scheme = url.base.scheme
+      const domains = url.base.domains
+      const port = url.base.port
+        ? !isHiddenPort(url.base.scheme, url.base.port)
+          ? `:${url.base.port}`
+          : ''
+        : ''
+
+      // Handle authentication
+      const username = url.base.authentication?.username
+      const password = url.base.authentication?.password
+      const authentication = typeof username !== 'undefined'
+        ? typeof password !== 'undefined'
+          ? `${username}:${password}@`
+          : `${username}@`
+        : ''
+
+      firstHalf = `${scheme}://${authentication}${domains}${port}`
+      break
   }
 
-  // Remove port if scheme is http and port is 80
-  if (url.scheme === 'http' && url.port === 80) url.port = undefined
+  /**
+   * Generate the second half of the URL
+   */
 
-  // Remove port if scheme is https and port is 443
-  if (url.scheme === 'https' && url.port === 443) url.port = undefined
+  const path = typeof url.path !== 'undefined'
+    ? url.path
+    : ''
+  
+  const query = typeof url.query !== 'undefined'
+    ? `?${new URLSearchParams(url.query).toString()}`
+    : ''
 
-  let build = ''
+  const fragment = typeof url.fragment !== 'undefined'
+    ? `#${url.fragment}`
+    : ''
 
-  // Build URL string
-  if (url.scheme !== undefined) build += url.scheme + '://'
-  if (url.username !== undefined && url.password !== undefined) build += url.username + ':' + url.password + '@'
-  build += url.hostname
-  if (url.port !== undefined) build += ':' + url.port.toString()
-  if (url.endpoint !== undefined) build += '/' + url.endpoint
+  secondHalf = `${path}${query}${fragment}`
 
-  return build
+  // Combine both halves of the URL
+  return `${firstHalf}${secondHalf}`
 }
-
